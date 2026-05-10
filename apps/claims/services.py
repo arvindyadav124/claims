@@ -1,6 +1,6 @@
 from django.db.models import QuerySet
 
-from apps.claims.models import Claim, ClaimLineItem
+from apps.claims.models import Claim, ClaimLineItem, Dispute
 from apps.policies.models import Policy
 
 
@@ -26,3 +26,19 @@ def claim_line_item_get(pk: int) -> ClaimLineItem:
 
 def claim_line_items_for_claim(*, claim_id: int) -> QuerySet[ClaimLineItem]:
     return ClaimLineItem.objects.filter(claim_id=claim_id).select_related("claim", "checked_by").order_by("id")
+
+
+def dispute_create(**kwargs) -> Dispute:
+    return Dispute.objects.create(**kwargs)
+
+
+def dispute_get(pk: int) -> Dispute:
+    return Dispute.objects.select_related("claim", "checked_by", "created_by", "updated_by").get(pk=pk)
+
+
+def disputes_for_claim(*, claim_id: int) -> QuerySet[Dispute]:
+    return (
+        Dispute.objects.filter(claim_id=claim_id)
+        .select_related("claim", "checked_by", "created_by", "updated_by")
+        .order_by("-created_at")
+    )

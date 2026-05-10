@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.claims import services
-from apps.claims.models import Claim, ClaimLineItem
+from apps.claims.models import Claim, ClaimLineItem, Dispute
 
 
 class ClaimSerializer(serializers.ModelSerializer):
@@ -52,3 +52,23 @@ class ClaimLineItemSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return services.claim_line_item_create(**validated_data)
+
+
+class DisputeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dispute
+        fields = [
+            "id",
+            "claim",
+            "reason",
+            "status",
+            "checked_by",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_by", "updated_by", "created_at", "updated_at"]
+
+    def create(self, validated_data):
+        return services.dispute_create(**validated_data)

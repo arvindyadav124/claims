@@ -73,3 +73,53 @@ class ClaimLineItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.diagnosis_code} (claim {self.claim_id})"
+
+
+class Dispute(models.Model):
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        UNDER_REVIEW = "under_review", "Under review"
+        RESOLVED = "resolved", "Resolved"
+        REJECTED = "rejected", "Rejected"
+
+    claim = models.ForeignKey(
+        Claim,
+        on_delete=models.CASCADE,
+        related_name="disputes",
+    )
+    reason = models.TextField()
+    status = models.CharField(
+        max_length=32,
+        choices=Status.choices,
+        default=Status.OPEN,
+    )
+    checked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="checked_disputes",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_disputes",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_disputes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "disputes"
+        verbose_name_plural = "Disputes"
+
+    def __str__(self) -> str:
+        return f"Dispute {self.pk} on {self.claim_id}"

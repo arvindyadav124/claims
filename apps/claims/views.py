@@ -1,8 +1,20 @@
 from rest_framework import mixins, viewsets
 
 from apps.claims import services
-from apps.claims.models import Claim, ClaimLineItem
-from apps.claims.serializers import ClaimLineItemSerializer, ClaimSerializer
+from apps.claims.models import Claim, ClaimLineItem, Dispute
+from apps.claims.serializers import ClaimLineItemSerializer, ClaimSerializer, DisputeSerializer
+
+
+class DisputeViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = DisputeSerializer
+
+    def get_queryset(self):
+        claim_id = self.request.query_params.get("claim_id")
+        if claim_id:
+            return services.disputes_for_claim(claim_id=int(claim_id))
+        return Dispute.objects.select_related("claim", "checked_by", "created_by", "updated_by").all().order_by(
+            "-created_at"
+        )
 
 
 class ClaimLineItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
