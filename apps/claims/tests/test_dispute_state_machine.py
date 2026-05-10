@@ -8,14 +8,12 @@ from rest_framework.test import APIClient
 
 from apps.claims import services
 from apps.claims.state_machine import DisputeState
-from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_dispute_happy_path_to_resolved():
-    member_services.member_create(first_name="A", last_name="B", email="dsp@example.com")
     p = policy_services.policy_create(
         name="Plan",
         price=Decimal("10.00"),
@@ -34,7 +32,6 @@ def test_dispute_happy_path_to_resolved():
 
 @pytest.mark.django_db
 def test_dispute_cannot_skip_to_resolved():
-    member_services.member_create(first_name="A", last_name="B", email="dsp2@example.com")
     p = policy_services.policy_create(
         name="Plan2",
         price=Decimal("10.00"),
@@ -50,7 +47,6 @@ def test_dispute_cannot_skip_to_resolved():
 
 @pytest.mark.django_db
 def test_dispute_transition_api():
-    member_services.member_create(first_name="A", last_name="B", email="dsp3@example.com")
     p = policy_services.policy_create(
         name="Plan3",
         price=Decimal("10.00"),

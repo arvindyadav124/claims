@@ -4,14 +4,12 @@ import pytest
 
 from apps.claims import services
 from apps.claims.state_machine import ClaimState
-from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_claim_submit_for_policy():
-    member_services.member_create(first_name="A", last_name="B", email="c@example.com")
     p = policy_services.policy_create(
         name="Silver Plan",
         price=Decimal("50.00"),

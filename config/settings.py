@@ -8,6 +8,9 @@ DEBUG = True
 
 ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 
+# Disable automatic trailing-slash redirects (matches DRF DefaultRouter trailing_slash=False).
+APPEND_SLASH = False
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

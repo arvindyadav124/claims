@@ -4,14 +4,12 @@ import pytest
 
 from apps.claims import services
 from apps.claims.state_machine import ClaimLineItemState, ClaimState
-from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_all_lines_approved_moves_claim_to_approved_when_in_review():
-    member_services.member_create(first_name="A", last_name="B", email="sync1@example.com")
     p = policy_services.policy_create(
         name="P1",
         price=Decimal("10.00"),
@@ -34,7 +32,6 @@ def test_all_lines_approved_moves_claim_to_approved_when_in_review():
 
 @pytest.mark.django_db
 def test_mixed_line_outcomes_set_claim_partially_approved():
-    member_services.member_create(first_name="A", last_name="B", email="sync2@example.com")
     p = policy_services.policy_create(
         name="P2",
         price=Decimal("10.00"),
@@ -55,7 +52,6 @@ def test_mixed_line_outcomes_set_claim_partially_approved():
 
 @pytest.mark.django_db
 def test_all_lines_denied_sets_claim_denied_from_submitted_chain():
-    member_services.member_create(first_name="A", last_name="B", email="sync3@example.com")
     p = policy_services.policy_create(
         name="P3",
         price=Decimal("10.00"),

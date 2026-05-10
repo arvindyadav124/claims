@@ -12,14 +12,12 @@ class Member(models.Model):
     email = models.EmailField(unique=True)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.CASCADE,
         related_name="member_profile",
     )
-    dob = models.DateField(null=True, blank=True)
-    gender = models.CharField(max_length=1, choices=Gender.choices, null=True, blank=True)
-    mobile = models.CharField(max_length=20, blank=True)
+    dob = models.DateField()
+    gender = models.CharField(max_length=1, choices=Gender.choices)
+    mobile = models.CharField(max_length=20)
     address = models.TextField(blank=True)
     distt = models.CharField("district", max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)

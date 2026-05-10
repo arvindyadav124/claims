@@ -1,9 +1,12 @@
 import pytest
 
 from apps.members import services
+from apps.members.tests.support import create_test_member
 
 
 @pytest.mark.django_db
 def test_member_create_and_get():
-    m = services.member_create(first_name="A", last_name="B", email="a@example.com")
-    assert services.member_get(pk=m.pk).email == "a@example.com"
+    m, _user = create_test_member(email="svc-a@example.com")
+    assert services.member_get(pk=m.pk).email == "svc-a@example.com"
+    assert m.mobile == "5550100200"
+    assert m.user_id is not None

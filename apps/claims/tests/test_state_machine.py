@@ -9,14 +9,12 @@ from rest_framework.test import APIClient
 from apps.claims import services
 from apps.claims.models import ClaimLineItem
 from apps.claims.state_machine import ClaimLineItemState, ClaimState
-from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_claim_happy_path_through_paid():
-    member_services.member_create(first_name="A", last_name="B", email="sm@example.com")
     p = policy_services.policy_create(
         name="Plan",
         price=Decimal("10.00"),
@@ -35,7 +33,6 @@ def test_claim_happy_path_through_paid():
 
 @pytest.mark.django_db
 def test_claim_cannot_skip_to_paid():
-    member_services.member_create(first_name="A", last_name="B", email="sm2@example.com")
     p = policy_services.policy_create(
         name="Plan2",
         price=Decimal("10.00"),
@@ -50,7 +47,6 @@ def test_claim_cannot_skip_to_paid():
 
 @pytest.mark.django_db
 def test_line_item_manual_review_branch():
-    member_services.member_create(first_name="A", last_name="B", email="sm3@example.com")
     p = policy_services.policy_create(
         name="Plan3",
         price=Decimal("10.00"),
@@ -68,7 +64,6 @@ def test_line_item_manual_review_branch():
 
 @pytest.mark.django_db
 def test_line_item_frozen_when_claim_paid():
-    member_services.member_create(first_name="A", last_name="B", email="sm4@example.com")
     p = policy_services.policy_create(
         name="Plan4",
         price=Decimal("10.00"),
@@ -91,7 +86,6 @@ def test_line_item_frozen_when_claim_paid():
 
 @pytest.mark.django_db
 def test_claim_transition_api_returns_400_on_invalid():
-    member_services.member_create(first_name="A", last_name="B", email="sm5@example.com")
     p = policy_services.policy_create(
         name="Plan5",
         price=Decimal("10.00"),

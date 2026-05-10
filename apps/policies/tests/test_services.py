@@ -2,14 +2,12 @@ from decimal import Decimal
 
 import pytest
 
-from apps.members import services as member_services
 from apps.policies import services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_policy_create_and_list():
-    member_services.member_create(first_name="A", last_name="B", email="p@example.com")
     p = services.policy_create(
         name="Gold Plan",
         price=Decimal("199.99"),

@@ -7,14 +7,12 @@ from rest_framework.test import APIClient
 
 from apps.claims import services
 from apps.claims.state_machine import ClaimLineItemState
-from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
 
 
 @pytest.mark.django_db
 def test_claim_line_item_create_and_list():
-    member_services.member_create(first_name="A", last_name="B", email="line@example.com")
     p = policy_services.policy_create(
         name="Plan",
         price=Decimal("10.00"),
