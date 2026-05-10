@@ -2,7 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "dev-only-change-in-production"
+SECRET_KEY = "dev-only-change-in-production-min-32-chars-for-jwt-hmac"
 
 DEBUG = True
 
@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "apps.auth_app",
     "apps.members",
     "apps.policies",
     "apps.claims",
@@ -71,6 +72,11 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "auth_app.User"
+
+JWT_ALGORITHM = "HS256"
+JWT_ACCESS_TOKEN_LIFETIME_SECONDS = 86400
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
