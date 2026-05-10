@@ -79,6 +79,10 @@ JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_LIFETIME_SECONDS = 86400
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.auth_app.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         # Replace with authentication-backed permissions before production.
         "rest_framework.permissions.AllowAny",
