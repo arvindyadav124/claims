@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -11,6 +12,8 @@ from apps.claims.models import ClaimLineItem
 from apps.claims.state_machine import ClaimLineItemState, ClaimState
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -94,7 +97,9 @@ def test_claim_transition_api_returns_400_on_invalid():
         eligible_gender=Policy.EligibleGender.BOTH,
     )
     c = services.claim_submit(policy=p, claim_number="CLM-SM5", amount_cents=100)
+    u = User.objects.create_user(email="claim-trans-400@example.com", password="Xx9!long-pass-word")
     client = APIClient()
+    client.force_authenticate(user=u)
     url = reverse("claim-transition", kwargs={"pk": c.pk})
     r = client.post(url, {"status": ClaimState.PAID.value}, format="json")
     assert r.status_code == status.HTTP_400_BAD_REQUEST

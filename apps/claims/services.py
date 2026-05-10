@@ -23,7 +23,7 @@ def _raise_drf(dj_exc: DjangoValidationError) -> None:
     raise DRFValidationError(detail=dj_exc.error_dict)
 
 
-def _sync_claim_with_line_item_outcomes(*, claim_id: int) -> None:
+def _sync_claim_with_line_item_outcomes(*, claim_id: int, actor_id: int | None = None) -> None:
     """
     When every line item is adjudicated (APPROVED or DENIED), align the claim header if allowed.
 
@@ -60,19 +60,28 @@ def _sync_claim_with_line_item_outcomes(*, claim_id: int) -> None:
         return
 
     if ClaimState(claim.status) == ClaimState.SUBMITTED:
-        claim_transition(claim_id=claim_id, to_status=ClaimState.IN_REVIEW.value)
+        claim_transition(claim_id=claim_id, to_status=ClaimState.IN_REVIEW.value, updated_by_id=actor_id)
 
     claim.refresh_from_db(fields=["status"])
     if ClaimState(claim.status) != desired:
-        claim_transition(claim_id=claim_id, to_status=desired.value)
+        claim_transition(claim_id=claim_id, to_status=desired.value, updated_by_id=actor_id)
 
 
-def claim_submit(*, policy: Policy, claim_number: str, amount_cents: int) -> Claim:
+def claim_submit(
+    *,
+    policy: Policy,
+    claim_number: str,
+    amount_cents: int,
+    created_by=None,
+    updated_by=None,
+) -> Claim:
     return Claim.objects.create(
         policy=policy,
         claim_number=claim_number,
         amount_cents=amount_cents,
         status=ClaimState.DRAFT.value,
+        created_by=created_by,
+        updated_by=updated_by,
     )
 
 
@@ -85,7 +94,13 @@ def claims_for_policy(*, policy_id: int) -> QuerySet[Claim]:
 
 
 @transaction.atomic
-def claim_transition(*, claim_id: int, to_status: int, checked_by_id: int | None = None) -> Claim:
+def claim_transition(
+    *,
+    claim_id: int,
+    to_status: int,
+    checked_by_id: int | None = None,
+    updated_by_id: int | None = None,
+) -> Claim:
     claim = Claim.objects.select_for_update().get(pk=claim_id)
     current = coerce_claim_state(claim.status)
     target = coerce_claim_state(to_status)
@@ -96,6 +111,8 @@ def claim_transition(*, claim_id: int, to_status: int, checked_by_id: int | None
     claim.status = target.value
     if checked_by_id is not None:
         claim.checked_by_id = checked_by_id
+    if updated_by_id is not None:
+        claim.updated_by_id = updated_by_id
     claim.save()
     return claim
 
@@ -116,7 +133,11 @@ def claim_line_items_for_claim(*, claim_id: int) -> QuerySet[ClaimLineItem]:
 
 @transaction.atomic
 def claim_line_item_transition(
-    *, line_item_id: int, to_status: int, checked_by_id: int | None = None
+    *,
+    line_item_id: int,
+    to_status: int,
+    checked_by_id: int | None = None,
+    actor_id: int | None = None,
 ) -> ClaimLineItem:
     item = ClaimLineItem.objects.select_related("claim").select_for_update().get(pk=line_item_id)
     try:
@@ -133,7 +154,7 @@ def claim_line_item_transition(
     if checked_by_id is not None:
         item.checked_by_id = checked_by_id
     item.save(update_fields=["status", "checked_by"])
-    _sync_claim_with_line_item_outcomes(claim_id=item.claim_id)
+    _sync_claim_with_line_item_outcomes(claim_id=item.claim_id, actor_id=actor_id)
     item.refresh_from_db()
     return item
 
@@ -145,7 +166,13 @@ def dispute_create(**kwargs) -> Dispute:
 
 
 @transaction.atomic
-def dispute_transition(*, dispute_id: int, to_status: int, checked_by_id: int | None = None) -> Dispute:
+def dispute_transition(
+    *,
+    dispute_id: int,
+    to_status: int,
+    checked_by_id: int | None = None,
+    updated_by_id: int | None = None,
+) -> Dispute:
     dispute = Dispute.objects.select_for_update().get(pk=dispute_id)
     current = coerce_dispute_state(dispute.status)
     target = coerce_dispute_state(to_status)
@@ -156,6 +183,8 @@ def dispute_transition(*, dispute_id: int, to_status: int, checked_by_id: int | 
     dispute.status = target.value
     if checked_by_id is not None:
         dispute.checked_by_id = checked_by_id
+    if updated_by_id is not None:
+        dispute.updated_by_id = updated_by_id
     dispute.save()
     return dispute
 

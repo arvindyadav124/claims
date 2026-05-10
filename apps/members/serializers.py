@@ -56,6 +56,9 @@ class MemberSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data: dict):
-        user = validated_data["user"]
-        validated_data["email"] = User.objects.normalize_email(user.email)
+        actor = self.context["request"].user
+        member_user = validated_data["user"]
+        validated_data["email"] = User.objects.normalize_email(member_user.email)
+        validated_data["created_by"] = actor
+        validated_data["updated_by"] = actor
         return services.member_create(**validated_data)

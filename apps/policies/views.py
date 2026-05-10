@@ -1,4 +1,5 @@
 from rest_framework import mixins, viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from apps.policies import services
 from apps.policies.models import PolicyItem
@@ -7,6 +8,7 @@ from apps.policies.serializers import PolicyItemSerializer, PolicySerializer
 
 class PolicyViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = PolicySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return services.policy_list()
@@ -14,6 +16,7 @@ class PolicyViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.L
 
 class PolicyItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = PolicyItemSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         policy_id = self.request.query_params.get("policy_id")

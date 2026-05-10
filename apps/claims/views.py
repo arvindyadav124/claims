@@ -1,5 +1,6 @@
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.claims import services
@@ -16,6 +17,7 @@ from apps.claims.serializers import (
 
 class DisputeViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = DisputeSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         claim_id = self.request.query_params.get("claim_id")
@@ -35,12 +37,14 @@ class DisputeViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
             dispute_id=dispute.pk,
             to_status=ser.validated_data["status"],
             checked_by_id=checked_by.pk if checked_by else None,
+            updated_by_id=request.user.pk,
         )
         return Response(DisputeSerializer(updated).data, status=status.HTTP_200_OK)
 
 
 class ClaimLineItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = ClaimLineItemSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         claim_id = self.request.query_params.get("claim_id")
@@ -58,12 +62,14 @@ class ClaimLineItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, m
             line_item_id=item.pk,
             to_status=ser.validated_data["status"],
             checked_by_id=checked_by.pk if checked_by else None,
+            actor_id=request.user.pk,
         )
         return Response(ClaimLineItemSerializer(updated).data, status=status.HTTP_200_OK)
 
 
 class ClaimViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = ClaimSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         policy_id = self.request.query_params.get("policy_id")
@@ -81,5 +87,6 @@ class ClaimViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
             claim_id=claim.pk,
             to_status=ser.validated_data["status"],
             checked_by_id=checked_by.pk if checked_by else None,
+            updated_by_id=request.user.pk,
         )
         return Response(ClaimSerializer(updated).data, status=status.HTTP_200_OK)

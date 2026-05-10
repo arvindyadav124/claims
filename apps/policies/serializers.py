@@ -23,12 +23,15 @@ class PolicySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "status", "created_by", "updated_by", "created_at", "updated_at"]
 
     def create(self, validated_data):
+        user = self.context["request"].user
         return services.policy_create(
             name=validated_data["name"],
             price=validated_data["price"],
             min_age=validated_data["min_age"],
             max_age=validated_data["max_age"],
             eligible_gender=validated_data["eligible_gender"],
+            created_by=user,
+            updated_by=user,
         )
 
 
@@ -50,10 +53,13 @@ class PolicyItemSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "updated_by", "created_at", "updated_at"]
 
     def create(self, validated_data):
+        user = self.context["request"].user
         return services.policy_item_create(
             policy=validated_data["policy"],
             diagnosis_code=validated_data["diagnosis_code"],
             max_percent_of_policy=validated_data["max_percent_of_policy"],
             max_yearly_limit=validated_data["max_yearly_limit"],
             max_claims_per_year=validated_data["max_claims_per_year"],
+            created_by=user,
+            updated_by=user,
         )

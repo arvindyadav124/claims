@@ -1,12 +1,15 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.policies import services
 from apps.policies.models import Policy
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -52,7 +55,9 @@ def test_policy_items_api_list_filter_by_policy_id():
         max_yearly_limit=Decimal("10000.00"),
         max_claims_per_year=5,
     )
+    u = User.objects.create_user(email="pol-item-filter@example.com", password="Xx9!long-pass-word")
     client = APIClient()
+    client.force_authenticate(user=u)
     url = reverse("policy-item-list")
     r = client.get(url, {"policy_id": p.pk})
     assert r.status_code == status.HTTP_200_OK
@@ -63,7 +68,9 @@ def test_policy_items_api_list_filter_by_policy_id():
 @pytest.mark.django_db
 def test_policy_items_url_not_shadowed_by_policy_pk():
     """`/items` must not be routed as a policy detail with pk='items'."""
+    u = User.objects.create_user(email="pol-item-shadow@example.com", password="Xx9!long-pass-word")
     client = APIClient()
+    client.force_authenticate(user=u)
     url = reverse("policy-item-list")
     r = client.get(url)
     assert r.status_code == status.HTTP_200_OK

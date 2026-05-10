@@ -10,6 +10,8 @@ def policy_create(
     min_age: int,
     max_age: int,
     eligible_gender: str,
+    created_by=None,
+    updated_by=None,
 ) -> Policy:
     return Policy.objects.create(
         name=name,
@@ -17,6 +19,8 @@ def policy_create(
         min_age=min_age,
         max_age=max_age,
         eligible_gender=eligible_gender,
+        created_by=created_by,
+        updated_by=updated_by,
     )
 
 
@@ -35,6 +39,8 @@ def policy_item_create(
     max_percent_of_policy: int,
     max_yearly_limit,
     max_claims_per_year: int,
+    created_by=None,
+    updated_by=None,
 ) -> PolicyItem:
     return PolicyItem.objects.create(
         policy=policy,
@@ -42,6 +48,8 @@ def policy_item_create(
         max_percent_of_policy=max_percent_of_policy,
         max_yearly_limit=max_yearly_limit,
         max_claims_per_year=max_claims_per_year,
+        created_by=created_by,
+        updated_by=updated_by,
     )
 
 

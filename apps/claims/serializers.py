@@ -34,10 +34,13 @@ class ClaimSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        user = self.context["request"].user
         return services.claim_submit(
             policy=validated_data["policy"],
             claim_number=validated_data["claim_number"],
             amount_cents=validated_data["amount_cents"],
+            created_by=user,
+            updated_by=user,
         )
 
 
@@ -89,7 +92,8 @@ class DisputeSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "status", "created_by", "updated_by", "created_at", "updated_at"]
 
     def create(self, validated_data):
-        return services.dispute_create(**validated_data)
+        user = self.context["request"].user
+        return services.dispute_create(created_by=user, updated_by=user, **validated_data)
 
 
 class DisputeTransitionSerializer(serializers.Serializer):

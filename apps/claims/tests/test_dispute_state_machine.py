@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -10,6 +11,8 @@ from apps.claims import services
 from apps.claims.state_machine import DisputeState
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -56,7 +59,9 @@ def test_dispute_transition_api():
     )
     c = services.claim_submit(policy=p, claim_number="CLM-DSP3", amount_cents=1)
     d = services.dispute_create(claim=c, reason="Issue")
+    u = User.objects.create_user(email="dsp-api@example.com", password="Xx9!long-pass-word")
     client = APIClient()
+    client.force_authenticate(user=u)
     url = reverse("dispute-transition", kwargs={"pk": d.pk})
     r = client.post(url, {"status": DisputeState.SUBMITTED.value}, format="json")
     assert r.status_code == status.HTTP_200_OK
