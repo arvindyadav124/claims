@@ -1,20 +1,23 @@
 from django.conf import settings
 from django.db import models
 
+from apps.claims.state_machine import (
+    ClaimLineItemState,
+    ClaimState,
+    claim_state_label,
+    line_item_state_label,
+)
 from apps.policies.models import Policy
+
+CLAIM_STATUS_CHOICES = [(s.value, claim_state_label(s)) for s in ClaimState]
+LINE_ITEM_STATUS_CHOICES = [(s.value, line_item_state_label(s)) for s in ClaimLineItemState]
 
 
 class Claim(models.Model):
-    class Status(models.TextChoices):
-        SUBMITTED = "submitted", "Submitted"
-        UNDER_REVIEW = "under_review", "Under review"
-        APPROVED = "approved", "Approved"
-        DENIED = "denied", "Denied"
-
     policy = models.ForeignKey(Policy, on_delete=models.PROTECT, related_name="claims")
     claim_number = models.CharField(max_length=64, unique=True)
     amount_cents = models.PositiveIntegerField()
-    status = models.CharField(max_length=32, choices=Status.choices, default=Status.SUBMITTED)
+    status = models.IntegerField(choices=CLAIM_STATUS_CHOICES, default=ClaimState.DRAFT.value)
     checked_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -54,11 +57,7 @@ class ClaimLineItem(models.Model):
     )
     diagnosis_code = models.CharField(max_length=32)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(
-        max_length=32,
-        choices=Claim.Status.choices,
-        default=Claim.Status.SUBMITTED,
-    )
+    status = models.IntegerField(choices=LINE_ITEM_STATUS_CHOICES, default=ClaimLineItemState.PENDING.value)
     checked_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

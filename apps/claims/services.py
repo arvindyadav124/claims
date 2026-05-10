@@ -1,11 +1,76 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.db.models import QuerySet
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.claims.models import Claim, ClaimLineItem, Dispute
+from apps.claims.state_machine import (
+    ClaimLineItemState,
+    ClaimState,
+    assert_line_item_mutable_for_parent_claim,
+    coerce_claim_state,
+    coerce_line_item_state,
+    validate_claim_transition,
+    validate_line_item_transition,
+)
 from apps.policies.models import Policy
 
 
+def _raise_drf(dj_exc: DjangoValidationError) -> None:
+    raise DRFValidationError(detail=dj_exc.error_dict)
+
+
+def _sync_claim_with_line_item_outcomes(*, claim_id: int) -> None:
+    """
+    When every line item is adjudicated (APPROVED or DENIED), align the claim header if allowed.
+
+    Skips DRAFT and terminal header states (APPROVED, PAID, DENIED) so we do not reopen or bypass
+    payment / denial outcomes.
+    """
+    claim = Claim.objects.select_for_update().get(pk=claim_id)
+    if claim.status in (
+        ClaimState.DRAFT.value,
+        ClaimState.APPROVED.value,
+        ClaimState.PAID.value,
+        ClaimState.DENIED.value,
+    ):
+        return
+
+    lines = list(ClaimLineItem.objects.filter(claim_id=claim_id))
+    if not lines:
+        return
+
+    ap = ClaimLineItemState.APPROVED.value
+    dn = ClaimLineItemState.DENIED.value
+    if any(int(li.status) not in (ap, dn) for li in lines):
+        return
+
+    if all(int(li.status) == ap for li in lines):
+        desired = ClaimState.APPROVED
+    elif all(int(li.status) == dn for li in lines):
+        desired = ClaimState.DENIED
+    else:
+        desired = ClaimState.PARTIALLY_APPROVED
+
+    claim.refresh_from_db(fields=["status"])
+    if ClaimState(claim.status) == desired:
+        return
+
+    if ClaimState(claim.status) == ClaimState.SUBMITTED:
+        claim_transition(claim_id=claim_id, to_status=ClaimState.IN_REVIEW.value)
+
+    claim.refresh_from_db(fields=["status"])
+    if ClaimState(claim.status) != desired:
+        claim_transition(claim_id=claim_id, to_status=desired.value)
+
+
 def claim_submit(*, policy: Policy, claim_number: str, amount_cents: int) -> Claim:
-    return Claim.objects.create(policy=policy, claim_number=claim_number, amount_cents=amount_cents)
+    return Claim.objects.create(
+        policy=policy,
+        claim_number=claim_number,
+        amount_cents=amount_cents,
+        status=ClaimState.DRAFT.value,
+    )
 
 
 def claim_get(pk: int) -> Claim:
@@ -16,7 +81,25 @@ def claims_for_policy(*, policy_id: int) -> QuerySet[Claim]:
     return Claim.objects.filter(policy_id=policy_id).select_related("policy", "checked_by").order_by("-created_at")
 
 
+@transaction.atomic
+def claim_transition(*, claim_id: int, to_status: int, checked_by_id: int | None = None) -> Claim:
+    claim = Claim.objects.select_for_update().get(pk=claim_id)
+    current = coerce_claim_state(claim.status)
+    target = coerce_claim_state(to_status)
+    try:
+        validate_claim_transition(current, target)
+    except DjangoValidationError as exc:
+        _raise_drf(exc)
+    claim.status = target.value
+    if checked_by_id is not None:
+        claim.checked_by_id = checked_by_id
+    claim.save()
+    return claim
+
+
 def claim_line_item_create(**kwargs) -> ClaimLineItem:
+    kwargs.pop("status", None)
+    kwargs["status"] = ClaimLineItemState.PENDING.value
     return ClaimLineItem.objects.create(**kwargs)
 
 
@@ -26,6 +109,30 @@ def claim_line_item_get(pk: int) -> ClaimLineItem:
 
 def claim_line_items_for_claim(*, claim_id: int) -> QuerySet[ClaimLineItem]:
     return ClaimLineItem.objects.filter(claim_id=claim_id).select_related("claim", "checked_by").order_by("id")
+
+
+@transaction.atomic
+def claim_line_item_transition(
+    *, line_item_id: int, to_status: int, checked_by_id: int | None = None
+) -> ClaimLineItem:
+    item = ClaimLineItem.objects.select_related("claim").select_for_update().get(pk=line_item_id)
+    try:
+        assert_line_item_mutable_for_parent_claim(claim_status=item.claim.status)
+    except DjangoValidationError as exc:
+        _raise_drf(exc)
+    current = coerce_line_item_state(item.status)
+    target = coerce_line_item_state(to_status)
+    try:
+        validate_line_item_transition(current, target)
+    except DjangoValidationError as exc:
+        _raise_drf(exc)
+    item.status = target.value
+    if checked_by_id is not None:
+        item.checked_by_id = checked_by_id
+    item.save(update_fields=["status", "checked_by"])
+    _sync_claim_with_line_item_outcomes(claim_id=item.claim_id)
+    item.refresh_from_db()
+    return item
 
 
 def dispute_create(**kwargs) -> Dispute:

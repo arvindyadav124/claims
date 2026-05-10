@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.claims import services
-from apps.claims.models import Claim
+from apps.claims.state_machine import ClaimLineItemState
 from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
@@ -27,8 +27,8 @@ def test_claim_line_item_create_and_list():
         claim=c,
         diagnosis_code="Z00",
         amount=Decimal("100.50"),
-        status=Claim.Status.SUBMITTED,
     )
+    assert li.status == ClaimLineItemState.PENDING.value
     rows = list(services.claim_line_items_for_claim(claim_id=c.pk))
     assert len(rows) == 1
     assert rows[0].pk == li.pk

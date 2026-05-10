@@ -1,7 +1,11 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from apps.claims import services
 from apps.claims.models import Claim, ClaimLineItem, Dispute
+
+
+User = get_user_model()
 
 
 class ClaimSerializer(serializers.ModelSerializer):
@@ -37,6 +41,13 @@ class ClaimSerializer(serializers.ModelSerializer):
         )
 
 
+class ClaimTransitionSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    checked_by = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), required=False, allow_null=True
+    )
+
+
 class ClaimLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClaimLineItem
@@ -48,10 +59,17 @@ class ClaimLineItemSerializer(serializers.ModelSerializer):
             "status",
             "checked_by",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "status"]
 
     def create(self, validated_data):
         return services.claim_line_item_create(**validated_data)
+
+
+class ClaimLineItemTransitionSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    checked_by = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), required=False, allow_null=True
+    )
 
 
 class DisputeSerializer(serializers.ModelSerializer):
