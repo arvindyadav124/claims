@@ -1,6 +1,11 @@
-from django.db.models import QuerySet
+from django.db.models import Prefetch, QuerySet
 
 from apps.policies.models import Policy, PolicyItem
+
+
+def _policy_queryset_with_items() -> QuerySet[Policy]:
+    item_qs = PolicyItem.objects.order_by("diagnosis_code")
+    return Policy.objects.prefetch_related(Prefetch("items", queryset=item_qs))
 
 
 def policy_create(
@@ -25,11 +30,11 @@ def policy_create(
 
 
 def policy_get(pk: int) -> Policy:
-    return Policy.objects.get(pk=pk)
+    return _policy_queryset_with_items().get(pk=pk)
 
 
 def policy_list() -> QuerySet[Policy]:
-    return Policy.objects.all().order_by("name")
+    return _policy_queryset_with_items().order_by("name")
 
 
 def policy_item_create(

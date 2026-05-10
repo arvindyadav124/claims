@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.claims import services
-from apps.claims.models import Claim, ClaimLineItem, Dispute
+from apps.claims.models import ClaimLineItem, Dispute
 from apps.claims.serializers import (
     ClaimLineItemSerializer,
     ClaimLineItemTransitionSerializer,
@@ -75,7 +75,7 @@ class ClaimViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
         policy_id = self.request.query_params.get("policy_id")
         if policy_id:
             return services.claims_for_policy(policy_id=int(policy_id))
-        return Claim.objects.select_related("policy", "checked_by").all().order_by("claim_number")
+        return services.claim_list()
 
     @action(detail=True, methods=["post"], url_path="transition")
     def transition(self, request, pk=None):

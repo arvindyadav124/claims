@@ -8,7 +8,24 @@ from apps.claims.models import Claim, ClaimLineItem, Dispute
 User = get_user_model()
 
 
+class ClaimLineItemNestedSerializer(serializers.ModelSerializer):
+    """Line item embedded under a claim (parent claim is implied)."""
+
+    class Meta:
+        model = ClaimLineItem
+        fields = [
+            "id",
+            "diagnosis_code",
+            "amount",
+            "status",
+            "checked_by",
+        ]
+        read_only_fields = fields
+
+
 class ClaimSerializer(serializers.ModelSerializer):
+    line_items = ClaimLineItemNestedSerializer(many=True, read_only=True)
+
     class Meta:
         model = Claim
         fields = [
@@ -17,6 +34,7 @@ class ClaimSerializer(serializers.ModelSerializer):
             "claim_number",
             "amount_cents",
             "status",
+            "line_items",
             "checked_by",
             "created_by",
             "updated_by",

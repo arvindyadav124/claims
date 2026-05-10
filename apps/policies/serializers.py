@@ -4,7 +4,28 @@ from apps.policies import services
 from apps.policies.models import Policy, PolicyItem
 
 
+class PolicyItemNestedSerializer(serializers.ModelSerializer):
+    """Policy item embedded under a policy (parent policy is implied)."""
+
+    class Meta:
+        model = PolicyItem
+        fields = [
+            "id",
+            "diagnosis_code",
+            "max_percent_of_policy",
+            "max_yearly_limit",
+            "max_claims_per_year",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
 class PolicySerializer(serializers.ModelSerializer):
+    items = PolicyItemNestedSerializer(many=True, read_only=True)
+
     class Meta:
         model = Policy
         fields = [
@@ -15,6 +36,7 @@ class PolicySerializer(serializers.ModelSerializer):
             "max_age",
             "eligible_gender",
             "status",
+            "items",
             "created_by",
             "updated_by",
             "created_at",

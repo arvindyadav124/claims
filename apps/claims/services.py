@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Prefetch, QuerySet
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.claims.models import Claim, ClaimLineItem, Dispute
@@ -17,6 +17,13 @@ from apps.claims.state_machine import (
     validate_line_item_transition,
 )
 from apps.policies.models import Policy
+
+
+def _claim_queryset_with_line_items() -> QuerySet[Claim]:
+    line_qs = ClaimLineItem.objects.select_related("checked_by").order_by("id")
+    return Claim.objects.select_related("policy", "checked_by").prefetch_related(
+        Prefetch("line_items", queryset=line_qs)
+    )
 
 
 def _raise_drf(dj_exc: DjangoValidationError) -> None:
@@ -75,7 +82,7 @@ def claim_submit(
     created_by=None,
     updated_by=None,
 ) -> Claim:
-    return Claim.objects.create(
+    c = Claim.objects.create(
         policy=policy,
         claim_number=claim_number,
         amount_cents=amount_cents,
@@ -83,14 +90,19 @@ def claim_submit(
         created_by=created_by,
         updated_by=updated_by,
     )
+    return _claim_queryset_with_line_items().get(pk=c.pk)
 
 
 def claim_get(pk: int) -> Claim:
-    return Claim.objects.select_related("policy", "checked_by").get(pk=pk)
+    return _claim_queryset_with_line_items().get(pk=pk)
 
 
 def claims_for_policy(*, policy_id: int) -> QuerySet[Claim]:
-    return Claim.objects.filter(policy_id=policy_id).select_related("policy", "checked_by").order_by("-created_at")
+    return _claim_queryset_with_line_items().filter(policy_id=policy_id).order_by("-created_at")
+
+
+def claim_list() -> QuerySet[Claim]:
+    return _claim_queryset_with_line_items().order_by("claim_number")
 
 
 @transaction.atomic
@@ -114,7 +126,7 @@ def claim_transition(
     if updated_by_id is not None:
         claim.updated_by_id = updated_by_id
     claim.save()
-    return claim
+    return _claim_queryset_with_line_items().get(pk=claim.pk)
 
 
 def claim_line_item_create(**kwargs) -> ClaimLineItem:
