@@ -86,7 +86,14 @@ class DisputeSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_by", "updated_by", "created_at", "updated_at"]
+        read_only_fields = ["id", "status", "created_by", "updated_by", "created_at", "updated_at"]
 
     def create(self, validated_data):
         return services.dispute_create(**validated_data)
+
+
+class DisputeTransitionSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    checked_by = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), required=False, allow_null=True
+    )

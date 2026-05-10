@@ -4,13 +4,16 @@ from django.db import models
 from apps.claims.state_machine import (
     ClaimLineItemState,
     ClaimState,
+    DisputeState,
     claim_state_label,
+    dispute_state_label,
     line_item_state_label,
 )
 from apps.policies.models import Policy
 
 CLAIM_STATUS_CHOICES = [(s.value, claim_state_label(s)) for s in ClaimState]
 LINE_ITEM_STATUS_CHOICES = [(s.value, line_item_state_label(s)) for s in ClaimLineItemState]
+DISPUTE_STATUS_CHOICES = [(s.value, dispute_state_label(s)) for s in DisputeState]
 
 
 class Claim(models.Model):
@@ -75,23 +78,13 @@ class ClaimLineItem(models.Model):
 
 
 class Dispute(models.Model):
-    class Status(models.TextChoices):
-        OPEN = "open", "Open"
-        UNDER_REVIEW = "under_review", "Under review"
-        RESOLVED = "resolved", "Resolved"
-        REJECTED = "rejected", "Rejected"
-
     claim = models.ForeignKey(
         Claim,
         on_delete=models.CASCADE,
         related_name="disputes",
     )
     reason = models.TextField()
-    status = models.CharField(
-        max_length=32,
-        choices=Status.choices,
-        default=Status.OPEN,
-    )
+    status = models.IntegerField(choices=DISPUTE_STATUS_CHOICES, default=DisputeState.DRAFT.value)
     checked_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

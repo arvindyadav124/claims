@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.claims import services
-from apps.claims.models import Dispute
+from apps.claims.state_machine import DisputeState
 from apps.members import services as member_services
 from apps.policies import services as policy_services
 from apps.policies.models import Policy
@@ -26,8 +26,8 @@ def test_dispute_create_and_list_for_claim():
     d = services.dispute_create(
         claim=c,
         reason="Amount incorrect",
-        status=Dispute.Status.OPEN,
     )
+    assert d.status == DisputeState.DRAFT.value
     rows = list(services.disputes_for_claim(claim_id=c.pk))
     assert len(rows) == 1
     assert rows[0].pk == d.pk

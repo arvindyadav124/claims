@@ -7,10 +7,13 @@ from apps.claims.models import Claim, ClaimLineItem, Dispute
 from apps.claims.state_machine import (
     ClaimLineItemState,
     ClaimState,
+    DisputeState,
     assert_line_item_mutable_for_parent_claim,
     coerce_claim_state,
+    coerce_dispute_state,
     coerce_line_item_state,
     validate_claim_transition,
+    validate_dispute_transition,
     validate_line_item_transition,
 )
 from apps.policies.models import Policy
@@ -136,7 +139,25 @@ def claim_line_item_transition(
 
 
 def dispute_create(**kwargs) -> Dispute:
+    kwargs.pop("status", None)
+    kwargs["status"] = DisputeState.DRAFT.value
     return Dispute.objects.create(**kwargs)
+
+
+@transaction.atomic
+def dispute_transition(*, dispute_id: int, to_status: int, checked_by_id: int | None = None) -> Dispute:
+    dispute = Dispute.objects.select_for_update().get(pk=dispute_id)
+    current = coerce_dispute_state(dispute.status)
+    target = coerce_dispute_state(to_status)
+    try:
+        validate_dispute_transition(current, target)
+    except DjangoValidationError as exc:
+        _raise_drf(exc)
+    dispute.status = target.value
+    if checked_by_id is not None:
+        dispute.checked_by_id = checked_by_id
+    dispute.save()
+    return dispute
 
 
 def dispute_get(pk: int) -> Dispute:

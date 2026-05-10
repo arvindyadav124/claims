@@ -10,6 +10,7 @@ from apps.claims.serializers import (
     ClaimSerializer,
     ClaimTransitionSerializer,
     DisputeSerializer,
+    DisputeTransitionSerializer,
 )
 
 
@@ -23,6 +24,19 @@ class DisputeViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.
         return Dispute.objects.select_related("claim", "checked_by", "created_by", "updated_by").all().order_by(
             "-created_at"
         )
+
+    @action(detail=True, methods=["post"], url_path="transition")
+    def transition(self, request, pk=None):
+        dispute = self.get_object()
+        ser = DisputeTransitionSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        checked_by = ser.validated_data.get("checked_by")
+        updated = services.dispute_transition(
+            dispute_id=dispute.pk,
+            to_status=ser.validated_data["status"],
+            checked_by_id=checked_by.pk if checked_by else None,
+        )
+        return Response(DisputeSerializer(updated).data, status=status.HTTP_200_OK)
 
 
 class ClaimLineItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

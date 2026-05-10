@@ -15,6 +15,9 @@ Line item (adjudication):
     MANUAL_REVIEW → APPROVED or DENIED
     APPROVED / DENIED → (end)
 
+Dispute (separate workflow):
+    DRAFT → SUBMITTED → IN_REVIEW → RESOLVED → (end)
+
 Design notes (take-home scope):
 - Line-item transitions still use LINE_ITEM_TRANSITIONS only; claim header transitions still use
   CLAIM_TRANSITIONS only (no free-form status writes).
@@ -47,6 +50,13 @@ class ClaimLineItemState(IntEnum):
     APPROVED = 2
     DENIED = 3
     MANUAL_REVIEW = 4
+
+
+class DisputeState(IntEnum):
+    DRAFT = 1
+    SUBMITTED = 2
+    IN_REVIEW = 3
+    RESOLVED = 4
 
 
 # --- Transition maps (single source of truth) ---------------------------------
@@ -85,6 +95,13 @@ LINE_ITEM_TRANSITIONS: Mapping[ClaimLineItemState, FrozenSet[ClaimLineItemState]
     ClaimLineItemState.DENIED: frozenset(),
 }
 
+DISPUTE_TRANSITIONS: Mapping[DisputeState, FrozenSet[DisputeState]] = {
+    DisputeState.DRAFT: frozenset({DisputeState.SUBMITTED}),
+    DisputeState.SUBMITTED: frozenset({DisputeState.IN_REVIEW}),
+    DisputeState.IN_REVIEW: frozenset({DisputeState.RESOLVED}),
+    DisputeState.RESOLVED: frozenset(),
+}
+
 
 def claim_state_label(state: ClaimState) -> str:
     return state.name.replace("_", " ").title()
@@ -102,6 +119,14 @@ def line_item_allowed_targets(from_state: ClaimLineItemState) -> FrozenSet[Claim
     return LINE_ITEM_TRANSITIONS.get(from_state, frozenset())
 
 
+def dispute_state_label(state: DisputeState) -> str:
+    return state.name.replace("_", " ").title()
+
+
+def dispute_allowed_targets(from_state: DisputeState) -> FrozenSet[DisputeState]:
+    return DISPUTE_TRANSITIONS.get(from_state, frozenset())
+
+
 def coerce_claim_state(value: int, *, field: str = "status") -> ClaimState:
     try:
         return ClaimState(int(value))
@@ -116,6 +141,14 @@ def coerce_line_item_state(value: int, *, field: str = "status") -> ClaimLineIte
     except ValueError:
         valid = ", ".join(str(s.value) for s in ClaimLineItemState)
         raise ValidationError({field: [f"Unknown line-item status code {value!r}. Valid codes: {valid}."]}) from None
+
+
+def coerce_dispute_state(value: int, *, field: str = "status") -> DisputeState:
+    try:
+        return DisputeState(int(value))
+    except ValueError:
+        valid = ", ".join(str(s.value) for s in DisputeState)
+        raise ValidationError({field: [f"Unknown dispute status code {value!r}. Valid codes: {valid}."]}) from None
 
 
 def validate_claim_transition(from_state: ClaimState, to_state: ClaimState) -> None:
@@ -154,6 +187,27 @@ def validate_line_item_transition(from_state: ClaimLineItemState, to_state: Clai
                     (
                         f"Invalid line-item transition {line_item_state_label(from_state)} → "
                         f"{line_item_state_label(to_state)}. Allowed next states: {allowed_txt}."
+                    )
+                ]
+            }
+        )
+
+
+def validate_dispute_transition(from_state: DisputeState, to_state: DisputeState) -> None:
+    if from_state == to_state:
+        return
+    allowed = dispute_allowed_targets(from_state)
+    if to_state not in allowed:
+        allowed_txt = (
+            ", ".join(f"{s.value} ({dispute_state_label(s)})" for s in sorted(allowed, key=lambda x: x.value))
+            or "none (terminal state)"
+        )
+        raise ValidationError(
+            {
+                "status": [
+                    (
+                        f"Invalid dispute transition {dispute_state_label(from_state)} → "
+                        f"{dispute_state_label(to_state)}. Allowed next states: {allowed_txt}."
                     )
                 ]
             }
