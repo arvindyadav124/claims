@@ -19,7 +19,7 @@ pytest
 ## API routes
 
 - `/api/members` — members (list/create); detail `/api/members/<id>`
-- `/api/policies` — policies; optional filter `?member_id=`
+- `/api/policies` — policy products (list/create)
 - `/api/claims` — claims; optional filter `?policy_id=`
 - `/admin/` — Django admin (`python manage.py createsuperuser`)
 
