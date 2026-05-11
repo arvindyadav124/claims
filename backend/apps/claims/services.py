@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import Prefetch, QuerySet
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
+from apps.claims import auto_review
 from apps.claims.models import Claim, ClaimLineItem, Dispute
 from apps.claims.state_machine import (
     ClaimLineItemState,
@@ -105,10 +106,6 @@ def claim_list() -> QuerySet[Claim]:
     return _claim_queryset_with_line_items().order_by("claim_number")
 
 
-def claim_delete(*, instance: Claim) -> None:
-    instance.delete()
-
-
 @transaction.atomic
 def claim_transition(
     *,
@@ -131,6 +128,29 @@ def claim_transition(
         claim.updated_by_id = updated_by_id
     claim.save()
     return _claim_queryset_with_line_items().get(pk=claim.pk)
+
+
+@transaction.atomic
+def claim_submit_for_auto_approval(*, claim_id: int, user) -> Claim:
+    """
+    Validate policy / member / line-item rules, then transition DRAFT → SUBMITTED.
+    """
+    claim = (
+        Claim.objects.select_for_update()
+        .select_related("policy")
+        .prefetch_related(Prefetch("line_items", queryset=ClaimLineItem.objects.order_by("id")))
+        .get(pk=claim_id)
+    )
+    if claim.status != ClaimState.DRAFT.value:
+        raise DRFValidationError({"detail": "Only draft claims can be submitted for auto-approval."})
+    violations = auto_review.collect_auto_approval_violations(claim=claim, user=user)
+    if violations:
+        raise DRFValidationError({"checks": violations})
+    return claim_transition(
+        claim_id=claim_id,
+        to_status=ClaimState.SUBMITTED.value,
+        updated_by_id=user.pk,
+    )
 
 
 def claim_line_item_create(**kwargs) -> ClaimLineItem:

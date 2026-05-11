@@ -19,6 +19,7 @@ def test_policy_create_and_list():
     assert len(listed) == 1
     assert listed[0].pk == p.pk
     assert listed[0].name == "Gold Plan"
+    assert listed[0].total_cover == 5_000_000
 
 
 @pytest.mark.django_db

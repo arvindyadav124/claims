@@ -71,7 +71,6 @@ class ClaimViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     serializer_class = ClaimSerializer
@@ -82,9 +81,6 @@ class ClaimViewSet(
         if policy_id:
             return services.claims_for_policy(policy_id=int(policy_id))
         return services.claim_list()
-
-    def perform_destroy(self, instance):
-        services.claim_delete(instance=instance)
 
     @action(detail=True, methods=["post"], url_path="transition")
     def transition(self, request, pk=None):
@@ -98,4 +94,9 @@ class ClaimViewSet(
             checked_by_id=checked_by.pk if checked_by else None,
             updated_by_id=request.user.pk,
         )
+        return Response(ClaimSerializer(updated).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="submit-for-auto-approval")
+    def submit_for_auto_approval(self, request, pk=None):
+        updated = services.claim_submit_for_auto_approval(claim_id=int(pk), user=request.user)
         return Response(ClaimSerializer(updated).data, status=status.HTTP_200_OK)

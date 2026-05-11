@@ -94,11 +94,14 @@ class ClaimLineItemTransitionSerializer(serializers.Serializer):
 
 
 class DisputeSerializer(serializers.ModelSerializer):
+    claim_number = serializers.CharField(source="claim.claim_number", read_only=True)
+
     class Meta:
         model = Dispute
         fields = [
             "id",
             "claim",
+            "claim_number",
             "reason",
             "status",
             "checked_by",
@@ -107,7 +110,15 @@ class DisputeSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "status", "created_by", "updated_by", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "claim_number",
+            "status",
+            "created_by",
+            "updated_by",
+            "created_at",
+            "updated_at",
+        ]
 
     def create(self, validated_data):
         user = self.context["request"].user

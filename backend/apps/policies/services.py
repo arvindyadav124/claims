@@ -15,6 +15,7 @@ def policy_create(
     min_age: int,
     max_age: int,
     eligible_gender: str,
+    total_cover: int = 5_000_000,
     created_by=None,
     updated_by=None,
 ) -> Policy:
@@ -24,6 +25,7 @@ def policy_create(
         min_age=min_age,
         max_age=max_age,
         eligible_gender=eligible_gender,
+        total_cover=total_cover,
         created_by=created_by,
         updated_by=updated_by,
     )

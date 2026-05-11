@@ -35,6 +35,7 @@ class PolicySerializer(serializers.ModelSerializer):
             "min_age",
             "max_age",
             "eligible_gender",
+            "total_cover",
             "status",
             "items",
             "created_by",
@@ -43,6 +44,9 @@ class PolicySerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "status", "created_by", "updated_by", "created_at", "updated_at"]
+        extra_kwargs = {
+            "total_cover": {"required": True, "min_value": 1},
+        }
 
     def create(self, validated_data):
         user = self.context["request"].user
@@ -52,6 +56,7 @@ class PolicySerializer(serializers.ModelSerializer):
             min_age=validated_data["min_age"],
             max_age=validated_data["max_age"],
             eligible_gender=validated_data["eligible_gender"],
+            total_cover=validated_data["total_cover"],
             created_by=user,
             updated_by=user,
         )

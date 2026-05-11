@@ -11,7 +11,17 @@ class PolicyItemInline(admin.TabularInline):
 
 @admin.register(Policy)
 class PolicyAdmin(admin.ModelAdmin):
-    list_display = ("name", "price", "min_age", "max_age", "eligible_gender", "status", "created_at", "updated_at")
+    list_display = (
+        "name",
+        "price",
+        "total_cover",
+        "min_age",
+        "max_age",
+        "eligible_gender",
+        "status",
+        "created_at",
+        "updated_at",
+    )
     list_filter = ("status", "eligible_gender")
     search_fields = ("name",)
     inlines = [PolicyItemInline]
