@@ -1,6 +1,8 @@
 # Insurance claims processing (Django + DRF)
 
-All backend commands assume your **current working directory is this folder** (`backend/`), where `manage.py` and `.venv` live.
+**First-time setup from a fresh zip:** start with the repository root [`README.md`](../README.md) (backend + frontend + registering a user).
+
+All backend commands below assume your **current working directory is this folder** (`backend/`), where `manage.py` and `.venv` live.
 
 ## Local setup
 

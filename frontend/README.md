@@ -1,6 +1,8 @@
 # Insurance management — frontend
 
-React + Vite SPA for the Django REST API (JWT Bearer). This package is intentionally small: **routing**, **auth shell**, **API client**, **layout**, and **UI primitives** only — no insurance business screens yet.
+React + Vite SPA for the Django REST API (JWT Bearer).
+
+**First-time setup from a fresh zip:** follow the repository root [`README.md`](../README.md) so the API is running and you have a test user before `npm run dev`.
 
 ## Tech stack
 

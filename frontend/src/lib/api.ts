@@ -26,7 +26,8 @@ api.interceptors.response.use(
       const url = String(error.config?.url ?? '')
       if (!url.includes('/auth/login')) {
         clearStoredToken()
-        if (!window.location.pathname.startsWith('/login')) {
+        const path = window.location.pathname
+        if (!path.startsWith('/login') && !path.startsWith('/register')) {
           window.location.assign('/login')
         }
       }
