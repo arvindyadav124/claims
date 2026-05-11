@@ -1,6 +1,9 @@
+from datetime import date
+
 from django.db.models import QuerySet
 
 from apps.member_policies.models import MemberPolicy
+from apps.members.models import Member
 
 
 def member_policy_create(
@@ -32,12 +35,26 @@ def member_policy_get(pk: int) -> MemberPolicy:
     )
 
 
-def member_policy_list(*, member_id: int | None = None, policy_id: int | None = None) -> QuerySet[MemberPolicy]:
+def member_policy_list(
+    *,
+    member_id: int | None = None,
+    policy_id: int | None = None,
+    user_id_for_mine: int | None = None,
+    active_on: date | None = None,
+) -> QuerySet[MemberPolicy]:
     qs = MemberPolicy.objects.select_related("member", "policy", "created_by", "updated_by").all()
-    if member_id is not None:
+    if user_id_for_mine is not None:
+        try:
+            member_pk = Member.objects.only("id").get(user_id=user_id_for_mine).pk
+        except Member.DoesNotExist:
+            return MemberPolicy.objects.none()
+        qs = qs.filter(member_id=member_pk)
+    elif member_id is not None:
         qs = qs.filter(member_id=member_id)
     if policy_id is not None:
         qs = qs.filter(policy_id=policy_id)
+    if active_on is not None:
+        qs = qs.filter(purchasing_date__lte=active_on, valid_up_to__gte=active_on)
     return qs.order_by("-purchasing_date", "-id")
 
 

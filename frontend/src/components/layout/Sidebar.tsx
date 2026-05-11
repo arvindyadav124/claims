@@ -22,6 +22,9 @@ export function Sidebar() {
         <NavLink to="/claims" className={navClass}>
           Claims
         </NavLink>
+        <NavLink to="/member-policies" className={navClass}>
+          Purchase policy
+        </NavLink>
         <NavLink to="/members" className={navClass}>
           Members
         </NavLink>

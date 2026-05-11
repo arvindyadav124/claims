@@ -40,6 +40,10 @@ export function getApiErrorMessage(error: unknown, fallback = 'Something went wr
     const data = error.response?.data as Record<string, unknown> | string | undefined
     if (typeof data === 'string' && data.trim()) return data
     if (data && typeof data === 'object') {
+      const checks = data.checks
+      if (Array.isArray(checks) && checks.length > 0 && checks.every((c) => typeof c === 'string')) {
+        return checks.join(' ')
+      }
       const detail = data.detail
       if (typeof detail === 'string') return detail
       const nonField = data.non_field_errors

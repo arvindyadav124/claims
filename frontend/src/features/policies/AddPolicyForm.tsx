@@ -24,10 +24,18 @@ const emptyForm: PolicyWithItemsFormValues = {
   min_age: 0,
   max_age: 120,
   eligible_gender: 'both',
+  total_cover: 5_000_000,
   items: [defaultLine()],
 }
 
-const policyFieldKeys: (keyof PolicyWithItemsFormValues)[] = ['name', 'price', 'min_age', 'max_age', 'eligible_gender']
+const policyFieldKeys: (keyof PolicyWithItemsFormValues)[] = [
+  'name',
+  'price',
+  'min_age',
+  'max_age',
+  'eligible_gender',
+  'total_cover',
+]
 
 export function AddPolicyForm() {
   const queryClient = useQueryClient()
@@ -53,6 +61,7 @@ export function AddPolicyForm() {
         min_age: values.min_age,
         max_age: values.max_age,
         eligible_gender: values.eligible_gender,
+        total_cover: values.total_cover,
       })
       const lines = values.items.filter((row) => row.diagnosis_code.trim())
       for (let i = 0; i < lines.length; i++) {
@@ -167,6 +176,19 @@ export function AddPolicyForm() {
                   inputMode="decimal"
                   {...register('price', { required: 'Price is required.' })}
                 />
+              </Field>
+              <Field label="Total cover" error={errors.total_cover?.message}>
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  {...register('total_cover', {
+                    required: 'Total cover is required.',
+                    valueAsNumber: true,
+                    validate: (v) => (Number.isFinite(v) && v >= 1 ? true : 'Enter a positive whole number.'),
+                  })}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Maximum total coverage (integer amount).</p>
               </Field>
               <Field label="Eligible gender" error={errors.eligible_gender?.message}>
                 <select

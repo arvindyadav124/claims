@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input'
 import { createClaim, createClaimLineItem } from '@/features/claims/claims.api'
 import { claimsQueryKey } from '@/features/claims/claims.keys'
 import type { Claim, ClaimWithLinesFormValues } from '@/features/claims/types'
-import { fetchPolicies } from '@/features/policies/policies.api'
-import { policiesQueryKey } from '@/features/policies/policies.keys'
+import { fetchMyActiveMemberPolicies } from '@/features/memberPolicies/memberPolicies.api'
+import { memberPoliciesMineQueryKey } from '@/features/memberPolicies/memberPolicies.keys'
+import type { MemberPolicy } from '@/features/memberPolicies/types'
 import { getApiErrorMessage, getApiFieldErrors } from '@/lib/api'
 
 const defaultLine = (): ClaimWithLinesFormValues['items'][number] => ({
@@ -27,13 +28,25 @@ const emptyForm: ClaimWithLinesFormValues = {
 
 const claimFieldKeys: (keyof ClaimWithLinesFormValues)[] = ['policy', 'claim_number', 'amount_cents']
 
+function policyOptionsFromPurchases(rows: MemberPolicy[]): { id: number; name: string }[] {
+  const byId = new Map<number, string>()
+  for (const row of rows) {
+    if (!byId.has(row.policy)) {
+      byId.set(row.policy, row.policy_name?.trim() ? row.policy_name : `Policy ${row.policy}`)
+    }
+  }
+  return [...byId.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+}
+
 export function AddClaimForm() {
   const queryClient = useQueryClient()
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const policiesQuery = useQuery({
-    queryKey: policiesQueryKey,
-    queryFn: fetchPolicies,
+  const myPoliciesQuery = useQuery({
+    queryKey: memberPoliciesMineQueryKey,
+    queryFn: fetchMyActiveMemberPolicies,
   })
 
   const {
@@ -121,15 +134,16 @@ export function AddClaimForm() {
     },
   })
 
-  const policies = policiesQuery.data ?? []
-  const policyOptionsReady = !policiesQuery.isPending && !policiesQuery.isError
+  const policies = policyOptionsFromPurchases(myPoliciesQuery.data ?? [])
+  const policyOptionsReady = !myPoliciesQuery.isPending && !myPoliciesQuery.isError
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Add claim</CardTitle>
         <CardDescription>
-          Creates the claim header first, then saves each line item against the new claim ID.
+          Creates the claim header first, then saves each line item against the new claim ID. You can only select
+          policies you have purchased with a current enrollment.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -161,9 +175,15 @@ export function AddClaimForm() {
 
           <fieldset className="space-y-4 border-0 p-0">
             <legend className="mb-2 text-sm font-semibold">Claim</legend>
-            {policiesQuery.isError ? (
+            {myPoliciesQuery.isError ? (
               <p className="text-sm text-destructive">
-                {getApiErrorMessage(policiesQuery.error, 'Could not load policies for selection.')}
+                {getApiErrorMessage(myPoliciesQuery.error, 'Could not load your purchased policies.')}
+              </p>
+            ) : null}
+            {policyOptionsReady && policies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No active purchased policies found. Purchase a policy under Member policies, then return here to file
+                a claim.
               </p>
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
@@ -177,7 +197,7 @@ export function AddClaimForm() {
                     validate: (v) => (Number.isFinite(v) && v > 0 ? true : 'Select a policy.'),
                   })}
                 >
-                  <option value={0}>{policiesQuery.isPending ? 'Loading policies…' : 'Select a policy'}</option>
+                  <option value={0}>{myPoliciesQuery.isPending ? 'Loading your policies…' : 'Select a policy'}</option>
                   {policies.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} (ID {p.id})

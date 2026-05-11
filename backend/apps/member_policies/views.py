@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -10,6 +11,11 @@ class MemberPolicyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if self.request.query_params.get("mine") == "1":
+            return services.member_policy_list(
+                user_id_for_mine=self.request.user.pk,
+                active_on=timezone.now().date(),
+            )
         member_id = self.request.query_params.get("member_id")
         policy_id = self.request.query_params.get("policy_id")
         return services.member_policy_list(

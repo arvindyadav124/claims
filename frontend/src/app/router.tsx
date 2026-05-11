@@ -5,9 +5,10 @@ import { ProtectedRoute } from '@/components/routes/ProtectedRoute'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { ClaimsPage } from '@/pages/ClaimsPage'
+import { MemberPoliciesPage } from '@/pages/MemberPoliciesPage'
 import { MembersPage } from '@/pages/MembersPage'
 import { PoliciesPage } from '@/pages/PoliciesPage'
-import { PlaceholderPage } from '@/pages/PlaceholderPage'
+import { DisputesPage } from '@/pages/DisputesPage'
 
 export const router = createBrowserRouter([
   {
@@ -24,8 +25,9 @@ export const router = createBrowserRouter([
           { index: true, element: <HomePage /> },
           { path: 'policies', element: <PoliciesPage /> },
           { path: 'claims', element: <ClaimsPage /> },
+          { path: 'member-policies', element: <MemberPoliciesPage /> },
           { path: 'members', element: <MembersPage /> },
-          { path: 'disputes', element: <PlaceholderPage title="Disputes" /> },
+          { path: 'disputes', element: <DisputesPage /> },
         ],
       },
     ],

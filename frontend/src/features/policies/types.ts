@@ -15,6 +15,7 @@ export type Policy = {
   min_age: number
   max_age: number
   eligible_gender: string
+  total_cover: number
   status: string
   items: PolicyItem[]
   created_at?: string
@@ -27,6 +28,7 @@ export type PolicyCreatePayload = {
   min_age: number
   max_age: number
   eligible_gender: string
+  total_cover: number
 }
 
 export type PolicyItemCreatePayload = {

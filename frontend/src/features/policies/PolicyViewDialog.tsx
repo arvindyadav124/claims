@@ -46,6 +46,10 @@ export function PolicyViewDialog({ policy, onDismiss }: PolicyViewDialogProps) {
               <dd className="font-medium">{policy.price}</dd>
             </div>
             <div>
+              <dt className="text-muted-foreground">Total cover</dt>
+              <dd className="font-medium tabular-nums">{policy.total_cover.toLocaleString()}</dd>
+            </div>
+            <div>
               <dt className="text-muted-foreground">Min age</dt>
               <dd className="font-medium">{policy.min_age}</dd>
             </div>

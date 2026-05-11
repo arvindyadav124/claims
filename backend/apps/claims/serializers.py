@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.claims import services
 from apps.claims.models import Claim, ClaimLineItem, Dispute
+from apps.member_policies.models import MemberPolicy
+from apps.members.models import Member
 
 
 User = get_user_model()
@@ -50,6 +53,37 @@ class ClaimSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if request is None or not request.user.is_authenticated:
+            return attrs
+        policy = attrs.get("policy")
+        if policy is None:
+            return attrs
+        user = request.user
+        today = timezone.now().date()
+        try:
+            member = Member.objects.get(user_id=user.pk)
+        except Member.DoesNotExist:
+            raise serializers.ValidationError(
+                {"policy": "A member profile is required to create a claim."}
+            )
+        if not MemberPolicy.objects.filter(
+            member=member,
+            policy_id=policy.pk,
+            purchasing_date__lte=today,
+            valid_up_to__gte=today,
+        ).exists():
+            raise serializers.ValidationError(
+                {
+                    "policy": (
+                        "You can only create claims for policies you have purchased "
+                        "with a current enrollment (valid from purchase date through valid-up-to)."
+                    )
+                }
+            )
+        return attrs
 
     def create(self, validated_data):
         user = self.context["request"].user

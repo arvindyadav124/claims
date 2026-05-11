@@ -57,6 +57,7 @@ export function PoliciesTable({ onDeleteError }: PoliciesTableProps) {
                 <th className="px-3 py-2 font-medium">ID</th>
                 <th className="px-3 py-2 font-medium">Name</th>
                 <th className="px-3 py-2 font-medium">Price</th>
+                <th className="px-3 py-2 font-medium">Total cover</th>
                 <th className="px-3 py-2 font-medium">Ages</th>
                 <th className="px-3 py-2 font-medium">Gender</th>
                 <th className="px-3 py-2 font-medium">Status</th>
@@ -70,6 +71,7 @@ export function PoliciesTable({ onDeleteError }: PoliciesTableProps) {
                   <td className="px-3 py-2 tabular-nums">{p.id}</td>
                   <td className="px-3 py-2 font-medium">{p.name}</td>
                   <td className="px-3 py-2">{p.price}</td>
+                  <td className="px-3 py-2 tabular-nums">{p.total_cover.toLocaleString()}</td>
                   <td className="px-3 py-2 whitespace-nowrap tabular-nums">
                     {p.min_age}–{p.max_age}
                   </td>
