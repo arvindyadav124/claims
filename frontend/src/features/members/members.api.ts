@@ -11,3 +11,7 @@ export async function createMember(payload: MemberCreatePayload): Promise<Member
   const { data } = await api.post<Member>('/api/members/', payload)
   return data
 }
+
+export async function deleteMember(id: number): Promise<void> {
+  await api.delete(`/api/members/${id}`)
+}

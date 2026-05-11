@@ -67,7 +67,13 @@ class ClaimLineItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, m
         return Response(ClaimLineItemSerializer(updated).data, status=status.HTTP_200_OK)
 
 
-class ClaimViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ClaimViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = ClaimSerializer
     permission_classes = [IsAuthenticated]
 
@@ -76,6 +82,9 @@ class ClaimViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
         if policy_id:
             return services.claims_for_policy(policy_id=int(policy_id))
         return services.claim_list()
+
+    def perform_destroy(self, instance):
+        services.claim_delete(instance=instance)
 
     @action(detail=True, methods=["post"], url_path="transition")
     def transition(self, request, pk=None):

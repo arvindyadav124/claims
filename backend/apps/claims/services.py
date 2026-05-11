@@ -105,6 +105,10 @@ def claim_list() -> QuerySet[Claim]:
     return _claim_queryset_with_line_items().order_by("claim_number")
 
 
+def claim_delete(*, instance: Claim) -> None:
+    instance.delete()
+
+
 @transaction.atomic
 def claim_transition(
     *,

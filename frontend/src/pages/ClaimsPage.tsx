@@ -1,15 +1,15 @@
 import { useState } from 'react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AddMemberForm } from '@/features/members/AddMemberForm'
-import { MembersTable } from '@/features/members/MembersTable'
+import { AddClaimForm } from '@/features/claims/AddClaimForm'
+import { ClaimsTable } from '@/features/claims/ClaimsTable'
 
-export function MembersPage() {
+export function ClaimsPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
+    <div className="mx-auto max-w-6xl space-y-4">
+      <h1 className="text-2xl font-semibold tracking-tight">Claims</h1>
       {deleteError ? (
         <div
           role="alert"
@@ -20,14 +20,14 @@ export function MembersPage() {
       ) : null}
       <Tabs defaultValue="list">
         <TabsList>
-          <TabsTrigger value="add">Add Member</TabsTrigger>
-          <TabsTrigger value="list">Members List</TabsTrigger>
+          <TabsTrigger value="add">Add claim</TabsTrigger>
+          <TabsTrigger value="list">Claim List</TabsTrigger>
         </TabsList>
         <TabsContent value="add">
-          <AddMemberForm />
+          <AddClaimForm />
         </TabsContent>
         <TabsContent value="list">
-          <MembersTable onDeleteError={setDeleteError} />
+          <ClaimsTable onDeleteError={setDeleteError} />
         </TabsContent>
       </Tabs>
     </div>

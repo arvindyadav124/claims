@@ -13,3 +13,7 @@ def member_get(pk: int) -> Member:
 
 def member_list() -> QuerySet[Member]:
     return Member.objects.all().order_by("last_name", "first_name")
+
+
+def member_delete(*, instance: Member) -> None:
+    instance.delete()
