@@ -6,12 +6,21 @@ from apps.policies.models import PolicyItem
 from apps.policies.serializers import PolicyItemSerializer, PolicySerializer
 
 
-class PolicyViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class PolicyViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = PolicySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return services.policy_list()
+
+    def perform_destroy(self, instance):
+        services.policy_delete(instance=instance)
 
 
 class PolicyItemViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

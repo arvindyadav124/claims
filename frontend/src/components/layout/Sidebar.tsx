@@ -16,7 +16,18 @@ export function Sidebar() {
         <NavLink to="/" end className={navClass}>
           Home
         </NavLink>
-        {/* Add feature routes here as you build pages */}
+        <NavLink to="/policies" className={navClass}>
+          Policies
+        </NavLink>
+        <NavLink to="/claims" className={navClass}>
+          Claims
+        </NavLink>
+        <NavLink to="/members" className={navClass}>
+          Members
+        </NavLink>
+        <NavLink to="/disputes" className={navClass}>
+          Disputes
+        </NavLink>
       </nav>
     </aside>
   )

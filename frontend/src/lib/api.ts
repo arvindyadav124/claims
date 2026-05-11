@@ -50,3 +50,19 @@ export function getApiErrorMessage(error: unknown, fallback = 'Something went wr
   if (error instanceof Error) return error.message
   return fallback
 }
+
+/** First string message per field from DRF validation payloads. */
+export function getApiFieldErrors(error: unknown): Record<string, string> {
+  if (!isAxiosError(error)) return {}
+  const raw = error.response?.data
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: Record<string, string> = {}
+  for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
+    if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'string') {
+      out[key] = val[0]
+    } else if (typeof val === 'string') {
+      out[key] = val
+    }
+  }
+  return out
+}

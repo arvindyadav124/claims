@@ -37,6 +37,10 @@ def policy_list() -> QuerySet[Policy]:
     return _policy_queryset_with_items().order_by("name")
 
 
+def policy_delete(*, instance: Policy) -> None:
+    instance.delete()
+
+
 def policy_item_create(
     *,
     policy: Policy,

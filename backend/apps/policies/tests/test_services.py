@@ -19,3 +19,16 @@ def test_policy_create_and_list():
     assert len(listed) == 1
     assert listed[0].pk == p.pk
     assert listed[0].name == "Gold Plan"
+
+
+@pytest.mark.django_db
+def test_policy_delete():
+    p = services.policy_create(
+        name="Temp Plan",
+        price=Decimal("10.00"),
+        min_age=0,
+        max_age=99,
+        eligible_gender=Policy.EligibleGender.BOTH,
+    )
+    services.policy_delete(instance=p)
+    assert not Policy.objects.filter(pk=p.pk).exists()

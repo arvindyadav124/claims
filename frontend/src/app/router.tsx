@@ -4,6 +4,9 @@ import { AppShell } from '@/components/layout/AppShell'
 import { ProtectedRoute } from '@/components/routes/ProtectedRoute'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
+import { MembersPage } from '@/pages/MembersPage'
+import { PoliciesPage } from '@/pages/PoliciesPage'
+import { PlaceholderPage } from '@/pages/PlaceholderPage'
 
 export const router = createBrowserRouter([
   {
@@ -16,7 +19,13 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <AppShell />,
-        children: [{ index: true, element: <HomePage /> }],
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'policies', element: <PoliciesPage /> },
+          { path: 'claims', element: <PlaceholderPage title="Claims" /> },
+          { path: 'members', element: <MembersPage /> },
+          { path: 'disputes', element: <PlaceholderPage title="Disputes" /> },
+        ],
       },
     ],
   },

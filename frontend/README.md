@@ -99,11 +99,14 @@ If you deploy the SPA and API on different origins, configure **CORS** on Django
 
 ## Routing (suggested growth)
 
-| Path        | Purpose                          |
-|------------|-----------------------------------|
-| `/login`   | Public — sign in                  |
-| `/`        | Protected — shell + home          |
-| future…    | Add nested routes under `AppShell` |
+| Path          | Purpose                          |
+|--------------|-----------------------------------|
+| `/login`     | Public — sign in                  |
+| `/`          | Protected — shell + home          |
+| `/policies`  | Placeholder                       |
+| `/claims`    | Placeholder                       |
+| `/members`   | Placeholder                       |
+| `/disputes`  | Placeholder                       |
 
 Edit `src/app/router.tsx` and `src/components/layout/Sidebar.tsx` when you add modules.
 
