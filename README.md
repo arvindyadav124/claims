@@ -1,26 +1,38 @@
-# Insurance claims processing (Django + DRF)
+# Claims — monorepo
 
-## Local setup
+This repository contains a **Django REST** backend and a **React (Vite)** frontend.
+
+| Part       | Path        | Notes                                      |
+|-----------|-------------|--------------------------------------------|
+| Backend   | `backend/`  | Python virtualenv lives at `backend/.venv` |
+| Frontend  | `frontend/` | See `frontend/README.md`                   |
+
+## Backend quick start
+
+From the repository root:
 
 ```bash
+cd backend
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
-## Tests
+Run tests:
 
 ```bash
-pytest
+cd backend
+.venv/bin/python -m pytest
 ```
 
-## API routes
+## Frontend quick start
 
-- `/api/members` — members (list/create); detail `/api/members/<id>`
-- `/api/policies` — policy products (list/create)
-- `/api/claims` — claims; optional filter `?policy_id=`
-- `/admin/` — Django admin (`python manage.py createsuperuser`)
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Domain apps live under `apps/` (`members`, `policies`, `claims`). Each app keeps **models**, **services** (calls into the ORM and rules), **serializers**, **views**, and **tests** together.
+With Django on `http://127.0.0.1:8000`, the Vite dev server proxies `/api` to the backend (see `frontend/vite.config.ts`).
